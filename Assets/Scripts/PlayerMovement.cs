@@ -42,6 +42,16 @@ public class PlayerMovement : MonoBehaviour
 
     public float normalRechargeRate;
     public float tiredRechargeRate;
+
+    [Header("Jump Settings")]
+
+    public float jumpForce;
+    public float jumpCooldown;
+    public float airMultiplier;
+    bool readyToJump = true;
+
+    bool quetedToJump;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -56,6 +66,7 @@ public class PlayerMovement : MonoBehaviour
         isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, groundLayer);
 
         PlayerInput();
+        SpeedControl();
 
         // ground drag application
         if (isGrounded)
@@ -71,6 +82,13 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         MovePlayer();
+
+        if(quetedToJump)
+        {
+            //quetedToJump = false;
+            //Jump();
+            //Invoke(nameof(ResetJump), jumpCooldown);
+        }
     }
 
     public void PlayerInput()
@@ -79,8 +97,20 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
+        //jump
+        if (Input.GetKeyDown(KeyCode.Space)  && isGrounded)
+        {
+            readyToJump = false;
+            Jump();
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+
+
+
+
+
         //sprint input
-        if(Input.GetKey(KeyCode.LeftShift) && currentSpeedBarValue > 0 && canSprint)
+        if (Input.GetKey(KeyCode.LeftShift) && currentSpeedBarValue > 0 && canSprint)
         {
             moveSpeed = speedWhenSprinting;
 
@@ -107,23 +137,26 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    public void MovePlayer()
+    private void MovePlayer()
     {
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        if (isGrounded)
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        else
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
     }
 
     IEnumerator FillRecharge(bool shouldSprint)
     {
-        
+
         yield return new WaitForSeconds(1f);
         canSprint = shouldSprint;
         if (canSprint)
         {
-            while(currentSpeedBarValue < 100)
+            while (currentSpeedBarValue < 100)
             {
-                if(isSprinting)
+                if (isSprinting)
                 {
                     yield break;
                 }
@@ -149,4 +182,29 @@ public class PlayerMovement : MonoBehaviour
         }
 
     }
+
+    private void Jump()
+    {
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        
+        rb.linearVelocity += Vector3.up * jumpForce;
+        //rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        Debug.Log(rb.linearVelocity);
+    }
+
+    private void ResetJump()
+    {
+        readyToJump = true;
+    }
+
+    private void SpeedControl()
+    {
+        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        if (flatVel.magnitude > moveSpeed)
+        {
+            Vector3 limitedVel = flatVel.normalized * moveSpeed;
+            rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
+        }
+    }
+
 }
