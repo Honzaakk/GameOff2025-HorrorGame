@@ -1,8 +1,5 @@
 using UnityEngine;
 
-
-
-
 public class CameraRotation : MonoBehaviour
 {
     public float sensX;
@@ -12,7 +9,9 @@ public class CameraRotation : MonoBehaviour
 
     float xRotation;
     float yRotation;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;

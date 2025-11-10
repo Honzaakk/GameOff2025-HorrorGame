@@ -1,0 +1,14 @@
+
+root = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_space_before_open_square_brackets = false
+
+csharp_new_line_before_open_brace = all
+csharp_indent_switch_labels = true
+csharp_space_between_method_call_parameter_list_parentheses = false

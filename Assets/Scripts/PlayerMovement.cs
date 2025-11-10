@@ -1,7 +1,6 @@
-using UnityEngine;
-using UnityEditor.UI;
-using UnityEngine.UI;
 using System.Collections;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -9,8 +8,10 @@ public class PlayerMovement : MonoBehaviour
     public float moveSpeed = 5f;
 
     public float groundDrag;
-    [Header("Ground check")]
 
+    public CameraShake cameraShake;
+
+    [Header("Ground check")]
     public LayerMask groundLayer;
     public bool isGrounded;
     public float playerHeight;
@@ -36,7 +37,6 @@ public class PlayerMovement : MonoBehaviour
     public GameObject fill;
 
     [Header("Sprint Recharge Settings")]
-
     bool canSprint;
     bool isSprinting;
 
@@ -44,7 +44,6 @@ public class PlayerMovement : MonoBehaviour
     public float tiredRechargeRate;
 
     [Header("Jump Settings")]
-
     public float jumpForce;
     public float jumpCooldown;
     public float airMultiplier;
@@ -57,13 +56,19 @@ public class PlayerMovement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        cameraShake = Camera.main.GetComponent<CameraShake>();
     }
 
     // Update is called once per frame
     void Update()
     {
         //ground check
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, groundLayer);
+        isGrounded = Physics.Raycast(
+            transform.position,
+            Vector3.down,
+            playerHeight * 0.5f + 0.2f,
+            groundLayer
+        );
 
         PlayerInput();
         SpeedControl();
@@ -83,7 +88,7 @@ public class PlayerMovement : MonoBehaviour
     {
         MovePlayer();
 
-        if(quetedToJump)
+        if (quetedToJump)
         {
             //quetedToJump = false;
             //Jump();
@@ -98,16 +103,17 @@ public class PlayerMovement : MonoBehaviour
         verticalInput = Input.GetAxisRaw("Vertical");
 
         //jump
-        if (Input.GetKeyDown(KeyCode.Space)  && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
             readyToJump = false;
             Jump();
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
-
-
-
+        if (Input.GetMouseButtonDown(1))
+        {
+            StartCoroutine(cameraShake.Shake(0.15f, 0.4f));
+        }
 
         //sprint input
         if (Input.GetKey(KeyCode.LeftShift) && currentSpeedBarValue > 0 && canSprint)
@@ -144,12 +150,14 @@ public class PlayerMovement : MonoBehaviour
         if (isGrounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
         else
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            rb.AddForce(
+                moveDirection.normalized * moveSpeed * 10f * airMultiplier,
+                ForceMode.Force
+            );
     }
 
     IEnumerator FillRecharge(bool shouldSprint)
     {
-
         yield return new WaitForSeconds(1f);
         canSprint = shouldSprint;
         if (canSprint)
@@ -176,20 +184,19 @@ public class PlayerMovement : MonoBehaviour
                 currentSpeedBarValue += tiredRechargeRate * Time.deltaTime;
                 sprintBar.value = currentSpeedBarValue;
                 yield return null;
-
             }
             canSprint = true;
         }
-
     }
 
     private void Jump()
     {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        
+
         rb.linearVelocity += Vector3.up * jumpForce;
         //rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-        Debug.Log(rb.linearVelocity);
+
+        StartCoroutine(cameraShake.Shake(0.15f, 0.4f));
     }
 
     private void ResetJump()
@@ -206,5 +213,4 @@ public class PlayerMovement : MonoBehaviour
             rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
         }
     }
-
 }

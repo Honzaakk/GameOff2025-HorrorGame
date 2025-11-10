@@ -1,6 +1,5 @@
-using UnityEngine;
 using System.Collections;
-
+using UnityEngine;
 
 public class CameraShake : MonoBehaviour
 {
@@ -24,7 +23,4 @@ public class CameraShake : MonoBehaviour
 
         transform.localPosition = originalPos;
     }
-
-
-
 }
